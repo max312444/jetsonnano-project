@@ -28,20 +28,26 @@ for i, image_file in enumerate(image_files):
     # 그레이스케일 변환
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
-    # 흰색 영역을 마스크로 추출 (흰색 범위 지정)
+    # 히스토그램 평활화 (대비를 높여서 라인 추출을 더 명확하게)
+    gray = cv2.equalizeHist(gray)
+
+    # 가우시안 블러로 노이즈 감소
+    blurred = cv2.GaussianBlur(gray, (5, 5), 0)
+
+    # Canny 엣지 검출 (임계값을 조정하여 더 정확한 엣지 검출)
+    edges = cv2.Canny(blurred, 50, 150)
+
+    # 흰색 범위만 추출하여 라인에 더 집중하기
     lower_white = np.array([200, 200, 200])  # 흰색 범위 (너무 밝은 색상)
     upper_white = np.array([255, 255, 255])  # 흰색 범위 (최대 밝기)
 
-    # 이미지에서 흰색 영역 추출
     mask = cv2.inRange(image, lower_white, upper_white)
-
-    # 마스크된 이미지를 이용하여 엣지 검출
-    edges = cv2.Canny(mask, 50, 150)
+    edges = cv2.bitwise_and(edges, edges, mask=mask)  # 라인에 해당하는 부분만 남기기
 
     # 허프 변환으로 라인 검출
     lines = cv2.HoughLinesP(
         edges, 
-        1, np.pi / 180, threshold=100, minLineLength=100, maxLineGap=10
+        1, np.pi / 180, threshold=50, minLineLength=50, maxLineGap=10
     )
 
     # 빈 캔버스 생성
