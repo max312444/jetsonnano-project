@@ -32,7 +32,7 @@ class DrivingDataset:
 
 # 예시 사용
 image_dir = r"C:\Users\USER\jetson_nano_dataset"  # 리사이즈된 이미지가 저장된 경로 (수정된 경로)
-label_file = r"C:\Users\USER\jetson_csv\labels.csv"  # CSV 레이블 파일 경로 (수정된 경로)
+label_file = r"C:\Users\USER\jetson_csv\jetson_data.csv"  # CSV 레이블 파일 경로 (수정된 경로)
 
 dataset = DrivingDataset(image_dir, label_file)
 
