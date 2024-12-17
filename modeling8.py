@@ -2,10 +2,10 @@ import pandas as pd
 import os
 
 # 기존 CSV 파일 경로
-existing_csv_path = r"C:\Users\USER\jetson_csv"  # 기존 파일 경로
+existing_csv_path = r"C:\Users\USER\jetson_csv\steering_data.csv"  # 기존 파일 경로
 
 # 새로운 CSV 파일 경로
-new_csv_path = r"C:\Users\USER\finish_image"  # 새로 저장할 파일 경로
+new_csv_path = r"C:\Users\USER\new_csv\new_steering_dat.csv"  # 새로 저장할 파일 경로
 
 # 기존 파일에서 새 파일로 저장
 try:
