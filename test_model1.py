@@ -1,63 +1,63 @@
 import torch
+import torch.nn as nn
 import torchvision.transforms as transforms
-import cv2
-from datetime import datetime
+from torch.utils.data import DataLoader, Dataset
+from PIL import Image
+import os
 
-# 모델 로드
-model_path = r"C:\Users\USER\steering_model.pth"  # 훈련된 모델 파일 경로
-model = torch.load(model_path)
-model.eval()  # 평가 모드로 설정
+# ==== 검증 데이터셋 클래스 ====
+class LineTrackingDataset(Dataset):
+    def __init__(self, data_dir, transform=None):
+        self.data_dir = data_dir
+        self.image_files = [f for f in os.listdir(data_dir) if f.endswith('.jpg')]
+        self.transform = transform
+    
+    def __len__(self):
+        return len(self.image_files)
+    
+    def __getitem__(self, idx):
+        image_path = os.path.join(self.data_dir, self.image_files[idx])
+        image = Image.open(image_path).convert('RGB')
+        
+        # 검증 데이터에는 레이블이 필요 없을 수 있음 (예측만 수행)
+        if self.transform:
+            image = self.transform(image)
+        return image, self.image_files[idx]  # 파일명도 반환해서 결과 매칭
 
-# 이미지 전처리
+# ==== 검증 데이터 전처리 ====
 transform = transforms.Compose([
-    transforms.ToPILImage(),
-    transforms.Resize((64, 64)),  # 모델 입력 크기에 맞게 조정
+    transforms.Resize((128, 128)),  # 학습 시 사용했던 이미지 크기
     transforms.ToTensor(),
-    transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+    transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])
 ])
 
-# 테스트 함수
-def test_model(model):
-    cap = cv2.VideoCapture(0)  # 카메라 캡처 시작
-    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
-    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
+# ==== 모델 불러오기 ====
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+model_path = 'trained_model.pth'  # 학습된 모델 경로
+model = torch.load(model_path)
+model = model.to(device)
+model.eval()  # 모델을 평가 모드로 설정
 
-    while True:
-        ret, frame = cap.read()
-        if not ret:
-            print("프레임을 읽을 수 없습니다.")
-            break
+# ==== 검증 데이터셋 및 데이터로더 ====
+data_dir = 'path_to_validation_images'  # 검증 데이터 경로
+batch_size = 8
 
-        # 이미지 전처리 및 예측
-        image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        image = transform(image).unsqueeze(0)  # 배치 차원 추가
-        with torch.no_grad():
-            prediction = model(image)
+validation_dataset = LineTrackingDataset(data_dir, transform=transform)
+validation_loader = DataLoader(validation_dataset, batch_size=batch_size, shuffle=False)
 
-        # 예측 결과 출력
-        _, predicted = torch.max(prediction, 1)
-        print(f"Predicted: {predicted.item()}")  # 예측된 클래스 출력
+# ==== 검증 과정 ====
+print("Starting validation...")
 
-        # 예측 결과를 바탕으로 실제 모델이 수행해야 할 작업 (예: 서보 각도, 전진/후진 등)
-        # 여기에 서보 제어나 모터 제어 코드를 추가할 수 있습니다.
-        # 예를 들어:
-        # if predicted.item() == 0:  # 직진
-        #     set_dc_motor(80, "forward")
-        # elif predicted.item() == 1:  # 왼쪽
-        #     set_servo_angle(70)
-        # elif predicted.item() == 2:  # 오른쪽
-        #     set_servo_angle(110)
+with torch.no_grad():  # 그래디언트 계산 비활성화
+    for images, filenames in validation_loader:
+        images = images.to(device)
+        outputs = model(images)  # 모델에 이미지 입력
+        
+        # 예측 결과 처리 (예: 분류 문제라면 소프트맥스 적용)
+        _, predicted = torch.max(outputs, 1)
+        
+        # 결과 출력
+        for i in range(len(filenames)):
+            print(f"Image: {filenames[i]}, Predicted: {predicted[i].item()}")
 
-        # 화면에 실시간 영상 출력
-        cv2.imshow('Test Webcam Feed', frame)
-
-        # 'q' 키를 누르면 종료
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
-
-    cap.release()
-    cv2.destroyAllWindows()
-
-# 메인 함수
-if __name__ == "__main__":
-    test_model(model)
+print("Validation completed.")
