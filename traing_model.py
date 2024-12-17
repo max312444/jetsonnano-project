@@ -102,7 +102,7 @@ criterion = nn.MSELoss()
 optimizer = optim.Adam(model.parameters(), lr=0.001)
 
 # 학습 루프
-num_epochs = 10  # 학습 에폭 수
+num_epochs = 20  # 학습 에폭 수
 for epoch in range(num_epochs):
     model.train()  # 학습 모드
     running_loss = 0.0
