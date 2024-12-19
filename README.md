@@ -13,7 +13,8 @@
 ---
 
 📂 프로젝트 구성
-하드웨어: Jetson Nano, 카메라 모듈, DC 모터, 서보 모터, DC-DC 컨버터
+하드웨어:
+Jetson Nano, 카메라 모듈, DC 모터, 서보 모터, DC-DC 컨버터
 소프트웨어: Python, PyTorch, OpenCV, CNN 모델
 주요 기능:
 라인 트레킹
@@ -22,15 +23,19 @@
 
 ---
 
-💡 참고 사항
-필수 의존성: 이 프로젝트를 실행하기 위해 필요한 라이브러리는 requirements.txt 파일을 참고해 설치하세요.
-Jetson Nano 환경 설정: Jetson Nano 설치 및 설정 방법은 setup_instructions.md 파일을 참고하세요.
+## ✅ To-Do List
+
+- [ ] 모델 학습 데이터셋 추가 수집  
+- [ ] 자율주행 알고리즘 최적화  
+- [ ] 경사로에서의 안정적 주행 테스트  
+- [ ] README 파일에 더 많은 시각 자료 추가  
 
 ---
 
-🤝 기여 방법
-이 저장소를 포크하세요.
-새로운 브랜치를 생성하세요: git checkout -b feature-branch-name
-변경사항을 커밋하세요: git commit -m 'Add some feature'
-변경사항을 푸시하세요: git push origin feature-branch-name
-Pull Request를 생성하세요.
+## ⚠️ 알려진 문제 (Known Issues)
+
+- Jetson Nano의 GPIO 핀 인식 문제  
+- 특정 환경에서 DC 모터가 불안정하게 작동하는 현상  
+- 모델 학습 속도가 느린 문제 (추후 NVIDIA CUDA 최적화 예정)  
+
+---
