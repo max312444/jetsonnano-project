@@ -1,7 +1,7 @@
 import pandas as pd
 import os
 
-# CSV 파일 경로 (바탕화면)
+# CSV 파일 경로 
 csv_path = r"C:\Users\USER\data.csv"
 
 # CSV 파일 로드
@@ -27,7 +27,7 @@ if 'direction' in df.columns:
     print("'direction' 열이 제거되었습니다.")
 
 # 수정된 CSV 저장 경로
-updated_csv_path = r"C:\Users\USER\training_data_cleaned.csv"
+updated_csv_path = r"C:\Users\USER\change_data.csv"
 df.to_csv(updated_csv_path, index=False)
 
 print(f"수정된 CSV 파일이 저장되었습니다: {updated_csv_path}")

@@ -28,7 +28,7 @@ try:
     )
 
     # 3. 결과 저장
-    balanced_csv_path = r"C:\Users\USER\oversampled_training_data.csv"
+    balanced_csv_path = r"C:\Users\USER\oversampled_data.csv"
     df_oversampled.to_csv(balanced_csv_path, index=False)
     print(f"Oversampled 데이터셋이 저장되었습니다: {balanced_csv_path}")
 
