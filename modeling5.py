@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import os
 
 # CSV 파일 경로
-csv_path = r"C:\Users\USER\jetson_csv\steering_data.csv"
+csv_path = r"C:\Users\USER\dataset_0117\lastdance_csv.csv"
 
 try:
     # 파일 경로 확인

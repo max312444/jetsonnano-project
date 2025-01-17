@@ -2,7 +2,7 @@ import pandas as pd
 import os
 
 # CSV 파일 경로
-csv_path = r"C:\Users\USER\jetson_csv\steering_data.csv"
+csv_path = r"C:\Users\USER\dataset_0117\lastdance_csv.csv"
 
 try:
     # CSV 파일 로드
@@ -21,7 +21,7 @@ try:
     df_cleaned = df[~df['frame_path'].isin(missing_files)]
 
     # 수정된 CSV 저장
-    updated_csv_path = r"C:\Users\USER\jetson_csv\steering_data.csv"
+    updated_csv_path = r"C:\Users\USER\dataset_0117\lastdance_csv.csv"
     df_cleaned.to_csv(updated_csv_path, index=False)
     print(f"수정된 CSV 파일이 저장되었습니다: {updated_csv_path}")
 

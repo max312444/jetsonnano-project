@@ -2,7 +2,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 # CSV 파일 경로
-csv_path = r"C:\Users\USER\jetson_csv\steering_data.csv"
+csv_path = r"C:\Users\USER\dataset_0117\lastdance_csv.csv"
 
 # 1. CSV 파일 로드
 df = pd.read_csv(csv_path)
@@ -34,7 +34,7 @@ if 'direction' in df_oversampled.columns:
     print("'direction' 열이 삭제되었습니다.")
 
 # 5. 결과 저장
-balanced_csv_path = r"C:\Users\USER\jetson_csv\steering_data.csv"
+balanced_csv_path = r"C:\Users\USER\dataset_0117\lastdance_csv.csv"
 df_oversampled.to_csv(balanced_csv_path, index=False)
 print(f"Oversampled 데이터셋이 저장되었습니다: {balanced_csv_path}")
 

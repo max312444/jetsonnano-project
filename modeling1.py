@@ -2,7 +2,7 @@ import os
 import pandas as pd
 
 # 사진 데이터가 저장된 폴더 경로
-base_dir = r"C:\Users\USER\jetson_nano_dataset"
+base_dir = r"C:\Users\USER\dataset_0117"
 
 # 데이터 저장용 리스트
 data = []
@@ -34,7 +34,7 @@ for angle_folder in os.listdir(base_dir):
 df = pd.DataFrame(data)
 
 # CSV 파일로 저장
-output_csv_path = os.path.join(base_dir, "steering_data.csv")
+output_csv_path = os.path.join(base_dir, "lastdance_csv.csv")
 df.to_csv(output_csv_path, index=False)
 
 print(f"CSV 파일이 생성되었습니다: {output_csv_path}")

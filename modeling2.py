@@ -2,7 +2,7 @@ import pandas as pd
 import os
 
 # 수정된 CSV 파일 경로
-csv_path = r"C:\Users\USER\jetson_csv\steering_data.csv"
+csv_path = r"C:\Users\USER\dataset_0117\lastdance_csv.csv"
 
 try:
     # CSV 파일 로드

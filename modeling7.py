@@ -4,10 +4,10 @@ from PIL import Image
 import numpy as np
 
 # 원본 이미지 폴더
-input_folder = r"C:\Users\USER\jetson_nano_dataset"
+input_folder = r"C:\Users\USER\dataset_0117"
 
 # 증강 이미지 저장 폴더
-output_folder = r"C:\Users\USER\finish_image"
+output_folder = r"C:\Users\USER\mydataset"
 os.makedirs(output_folder, exist_ok=True)
 
 # 모델에 맞는 크기 (200x66)
