@@ -1,0 +1,200 @@
+import Jetson.GPIO as GPIO
+import torch
+import cv2
+import numpy as np
+from time import sleep
+import time
+import threading
+import queue
+import subprocess
+import os
+
+# PWM 활성화 명령어
+
+subprocess.run(["sudo", "busybox", "devmem", "0x700031fc", "32", "0x45"])
+subprocess.run(["sudo", "busybox", "devmem", "0x6000d504", "32", "0x2"])
+subprocess.run(["sudo", "busybox", "devmem", "0x70003248", "32", "0x46"])
+subprocess.run(["sudo", "busybox", "devmem", "0x6000d100", "32", "0x00"])
+
+
+# PilotNet 클래스 정의
+class PilotNet(torch.nn.Module):
+    def __init__(self):
+        super(PilotNet, self).__init__()
+        self.conv = torch.nn.Sequential(
+            torch.nn.Conv2d(3, 24, kernel_size=5, stride=2),
+            torch.nn.ReLU(),
+            torch.nn.Conv2d(24, 36, kernel_size=5, stride=2),
+            torch.nn.ReLU(),
+            torch.nn.Conv2d(36, 48, kernel_size=5, stride=2),
+            torch.nn.ReLU(),
+            torch.nn.Conv2d(48, 64, kernel_size=3),
+            torch.nn.ReLU(),
+            torch.nn.Conv2d(64, 64, kernel_size=3),
+            torch.nn.ReLU()
+        )
+        self.fc = torch.nn.Sequential(
+            torch.nn.Linear(64 * 1 * 18, 100),
+            torch.nn.ReLU(),
+            torch.nn.Linear(100, 50),
+            torch.nn.ReLU(),
+            torch.nn.Linear(50, 10),
+            torch.nn.ReLU(),
+            torch.nn.Linear(10, 5)
+        )
+
+    def forward(self, x):
+        x = self.conv(x)
+        x = x.view(x.size(0), -1)
+        x = self.fc(x)
+        return x
+
+# 큐 생성
+angle_queue = queue.Queue(maxsize=1)
+exit_signal = queue.Queue()
+
+#GPIO.setwarnings(False)
+
+# GPIO 설정
+GPIO.setmode(GPIO.BOARD)
+
+servo_pin = 33
+dir_pin = 29
+in2_pin = 31
+pwm_pin = 32
+
+GPIO.setup(servo_pin, GPIO.OUT)
+
+# 서보 모터 설정 (50Hz로 설정)
+servo = GPIO.PWM(servo_pin, 50)  # 50Hz 주파수로 서보 모터 설정
+servo.start(7.5)  # 초기값 설정 (중립 90도)
+
+# DC 모터 설정 (1kHz로 설정)
+GPIO.setup(dir_pin, GPIO.OUT)
+GPIO.setup(in2_pin, GPIO.OUT)
+GPIO.setup(pwm_pin, GPIO.OUT)
+
+dc_motor = GPIO.PWM(pwm_pin, 1000)
+dc_motor.start(0)
+
+# 서보 모터 각도 설정 함수
+def set_servo_angle(angle):
+    global servo
+    angle = max(0, min(180, angle))  # 각도 제한
+    duty_cycle = 2.5 + (angle / 180.0) * 10  # duty cycle 계산
+    duty_cycle = max(2.5, min(12.5, duty_cycle))  # 서보 모터가 허용하는 범위로 duty cycle 제한
+    print(duty_cycle)
+    try:
+        servo.ChangeDutyCycle(float(duty_cycle))
+    except OSError as e:
+        print(f"OS Error in PWM control: {e}")
+    except ValueError as e:
+        print(f"Error in changing duty cycle: {e}")
+
+# DC 모터 제어 함수
+
+def control_dc_motor(direction, speed):
+    if direction == "forward":
+        GPIO.output(dir_pin, GPIO.LOW)
+        GPIO.output(in2_pin, GPIO.HIGH)
+    elif direction == "stop":
+        GPIO.output(dir_pin, GPIO.LOW)
+        GPIO.output(in2_pin, GPIO.LOW)
+    dc_motor.ChangeDutyCycle(speed)
+
+
+# 데이터 전처리 함수
+def preprocess_frame(frame):
+    frame_resized = cv2.resize(frame, (200, 66), interpolation=cv2.INTER_LINEAR)
+    frame_normalized = frame_resized / 255.0
+    frame_transposed = np.transpose(frame_normalized, (2, 0, 1))
+    return torch.tensor(frame_transposed, dtype=torch.float32).unsqueeze(0).to(device), frame_resized
+
+# 모델 로드
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+model_path = "/home/jowonjun/Desktop/mymodel.pth"
+model = PilotNet().to(device)
+model.load_state_dict(torch.load(model_path, map_location=device))
+model.eval()
+
+categories = [30, 60, 90, 120, 150]
+
+# FPS 최적화를 위한 설정
+FPS = 30  # 목표 FPS 설정
+
+# 쓰레드 1: DL 예측
+def dl_inference():
+    cap = cv2.VideoCapture(0)
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 320)
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 240)
+    cap.set(cv2.CAP_PROP_FPS, FPS)
+
+    with torch.no_grad():
+        while exit_signal.empty():
+            ret, frame = cap.read()
+            if not ret:
+                continue
+
+            frame_tensor, frame_resized = preprocess_frame(frame)
+            outputs = model(frame_tensor)
+            predicted_category = torch.argmax(outputs, dim=1).item()
+            predicted_angle = categories[predicted_category]
+            print("Predicted angle : ", predicted_angle, type(predicted_angle))
+
+            if angle_queue.full():
+                angle_queue.get()
+            angle_queue.put(predicted_angle)
+
+            #speed_queue.put(70)  # 예시로 속도는 70으로 설정
+
+            cv2.putText(frame_resized, f"Angle: {predicted_angle}", (10, 30),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+            cv2.imshow("Frame", frame_resized)
+
+            time.sleep(1 / FPS)
+
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                exit_signal.put(True)
+                break
+
+    cap.release()
+    cv2.destroyAllWindows()
+
+
+# 쓰레드 2: 서보 모터 및 DC 모터 제어
+def motor_control():
+  control_dc_motor("forward", 50)
+  while True:
+    if not angle_queue.empty():
+      angle = angle_queue.get()
+      print("Dequeued angle : ", angle, type(angle))
+      set_servo_angle(angle)
+
+        # 서보 모터 제어는 상대적으로 느리게 실행
+      time.sleep(0.1)  # 서보 모터 제어 주기 (0.1초 간격)
+
+# 메인 실행
+try:
+  thread1 = threading.Thread(target=dl_inference)
+  thread2 = threading.Thread(target=motor_control)
+
+  thread1.start()
+  thread2.start()
+
+  thread1.join()
+  thread2.join()
+
+except KeyboardInterrupt:
+    print("프로그램 종료 중...")
+
+finally:
+    try:
+        servo.stop()  # 서보 모터 정지
+
+        dc_motor.stop()  # DC 모터 정지
+    except Exception as e:
+        print(f"Warning: Failed to stop PWM devices cleanly: {e}")
+
+    GPIO.cleanup()  # GPIO 정리
+    #cv2.destroyAllWindows()  # OpenCV 창 닫기
+    print("정상적으로 종료되었습니다.")
