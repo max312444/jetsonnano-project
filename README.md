@@ -26,10 +26,7 @@ CNN を用いた End-to-End 深層学習モデルの学習、
 CNN ベースの End-to-End モデルを用い、  
 カメラ入力のみでステアリング角と速度を制御した実際の走行デモ映像です。
 
-### デモ①：基本的なライン追従走行
 [![Driving 1](https://img.youtube.com/vi/ljZoESxxi4k/0.jpg)](https://www.youtube.com/shorts/ljZoESxxi4k)
-
-### デモ②：曲線区間を含む走行
 [![Driving 2](https://img.youtube.com/vi/AzCirzt-FB4/0.jpg)](https://www.youtube.com/shorts/AzCirzt-FB4)
 
 ※ クリックすると YouTube（限定公開）で再生されます。
