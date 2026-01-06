@@ -29,8 +29,8 @@ CNN 기반 End-to-End 모델을 이용해
 > GitHub 미리보기 제한으로 인해  
 > 링크 클릭 시 브라우저에서 바로 재생됩니다.
 
-- ▶️ [주행영상 1 – (주행영상1.mp4)
-- ▶️ [주행영상 2 – (주행영상2.mp4)
+- ▶️ [주행영상 1 – (https://raw.githubusercontent.com/max312444/jetsonnano-project/main/주행영상1.mp4)
+- ▶️ [주행영상 2 – (https://raw.githubusercontent.com/max312444/jetsonnano-project/main/주행영상2.mp4)
 
 ---
 
